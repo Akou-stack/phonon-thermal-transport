@@ -1,5 +1,5 @@
 # Phonon-thermal-transport
-This repository contains 'sample' LAMMPS input scripts for atomistic simulation and phonon mode analysis, various python post processing scripts, and other key files, including initial atomistic model of stochastically created polycrystalline graphene, that work as input for the different scripts - which are part of my project to uinvestigate the thermal transport in defect engineered graphene. The files are as follows:
+This repository contains 'sample' LAMMPS input scripts for atomistic simulation and phonon mode analysis, various python post processing scripts, and other key files, including initial atomistic model of stochastically created polycrystalline graphene, that work as input for the different scripts - which are part of my project to investigate the thermal transport in defect engineered graphene. The files are as follows:
 
 A) LAMMPS input script: in.lammps
 
