@@ -1,0 +1,408 @@
+############################################################################
+## 300K eqlbm and heating for polycrystalline graphene mono layer ##
+#############################################################################
+
+## Simulation setup
+
+units           metal
+newton          on
+atom_style      full
+dimension       3
+boundary        p p p
+
+
+## Box and atom creation
+
+read_data	center.data
+#change_box all triclinic
+
+mass 1 12.0107
+
+
+variable tmp equal "120"
+variable vslab equal ${tmp}
+
+variable tmp equal "100"
+variable vNfreq equal ${tmp}
+
+variable tmp equal "1"
+variable vNswap equal ${tmp}
+
+################################
+
+variable tmp equal "(xhi - xlo)/v_vslab"
+variable vdx equal ${tmp}
+
+variable tmp equal "(xhi - xlo)/2"
+variable vhalfx equal ${tmp}
+
+variable tmp equal "xlo+v_vhalfx+v_vdx" 
+variable vcenterend equal ${tmp}
+
+variable tmp equal "xlo+v_vhalfx" 
+variable vcenter equal ${tmp}
+
+variable tmp equal "xlo" 
+variable vfirst equal ${tmp}
+
+variable tmp equal "xlo+v_vdx" 
+variable vfirstend equal ${tmp}
+
+region rfirst block ${vfirst} ${vfirstend} EDGE EDGE EDGE EDGE 
+group gfirst region rfirst
+
+region rcenter block ${vcenter} ${vcenterend} EDGE EDGE EDGE EDGE 
+group gcenter region rcenter
+
+## Potential
+
+#kspace_style  none
+pair_style airebo 1.92
+pair_coeff * * CH.airebo C
+
+## Simulation setup
+
+neighbor  1 bin
+neigh_modify  every 1 delay 0 check yes
+
+thermo 5000
+thermo_style custom step etotal lx ly lz pe pxx pyy pzz temp cpuremain
+
+
+####################################### Initialization
+velocity all create 300 1981654 dist gaussian sum no mom yes rot yes
+
+compute cke all ke/atom
+variable vtemp2 atom 100000*c_cke/(1.5*8.6173)
+
+compute   cslabs all chunk/atom bin/1d x lower ${vdx} units box
+
+variable vstep equal "step"
+variable vetotal equal "etotal"
+variable vpe equal "pe"
+variable vke equal "ke"
+variable vlx equal "lx"
+variable vly equal "ly"
+variable vlz equal "lz"
+variable vpxx equal "pxx"
+variable vpyy equal "pyy"
+variable vpzz equal "pzz"
+variable vtemp equal "temp"
+variable vcpuremain equal "cpuremain"
+
+
+fix	1 all ave/chunk 1 10000 10000 cslabs v_vtemp2 file tmp0.dat
+
+
+run 0
+
+unfix 1
+
+########################################## Minimization and equilibration
+
+
+fix 1 all box/relax x 0.0 y 0.0
+
+dump  1 all atom 500 ./min1.300.*.atom
+dump_modify   1 sort id
+
+minimize 0 1.0e-12 5000 5000
+
+undump	1
+
+unfix	1
+
+write_data pg.min1.data nocoeff
+
+##############################################  Relaxation: Fixed volume
+
+reset_timestep	0
+timestep 0.00005
+
+dump  1 all atom 5000 ./eqlbm1.300.*.atom
+dump_modify   1 sort id
+
+fix 1 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo1.dat
+
+run 100000 
+
+unfix 1
+unfix 5
+
+undump	1
+
+write_data pg.eqlbm300a.data nocoeff
+
+########################################## Pre-heat minimization and NVT equilibration
+
+
+reset_timestep	0
+timestep 0.0002
+
+velocity all create 300 324596 dist gaussian sum no mom yes rot yes
+
+run 0
+
+fix 1 all box/relax x 0.0 y 0.0
+
+dump  1 all atom 1000 ./min2.1.300.*.atom
+dump_modify   1 sort id
+
+minimize 0 1.0e-12 5000 5000
+
+unfix 1
+undump 1
+
+
+
+dump  1 all atom 5000 ./eqlbm2.1.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2.1.dat
+
+run 25000
+
+unfix 4
+undump 1
+unfix 5
+
+##########
+
+velocity all create 300 6384684 dist gaussian sum no mom yes rot yes
+
+run 0
+
+fix 1 all box/relax x 0.0 y 0.0
+
+dump  1 all atom 1000 ./min2.2.300.*.atom
+dump_modify   1 sort id
+
+minimize 0 1.0e-12 5000 5000
+
+unfix 1
+undump 1
+
+
+
+dump  1 all atom 5000 ./eqlbm2.2.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2.2.dat
+
+run 25000
+
+unfix 4
+undump 1
+unfix 5
+
+##########
+
+velocity all create 300 93876 dist gaussian sum no mom yes rot yes
+
+run 0
+
+fix 1 all box/relax x 0.0 y 0.0
+
+dump  1 all atom 1000 ./min2.3.300.*.atom
+dump_modify   1 sort id
+
+minimize 0 1.0e-12 5000 5000
+
+unfix 1
+undump 1
+
+
+
+dump  1 all atom 5000 ./eqlbm2.3.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2.3.dat
+
+run 25000
+
+unfix 4
+undump 1
+unfix 5
+
+##########
+
+velocity all create 300 257458 dist gaussian sum no mom yes rot yes
+
+run 0
+
+fix 1 all box/relax x 0.0 y 0.0
+
+dump  1 all atom 1000 ./min2.4.300.*.atom
+dump_modify   1 sort id
+
+minimize 0 1.0e-12 5000 5000
+
+unfix 1
+undump 1
+
+
+
+dump  1 all atom 5000 ./eqlbm2.4.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2.4.dat
+
+run 25000
+
+unfix 4
+undump 1
+unfix 5
+
+##########
+
+velocity all create 300 9652541 dist gaussian sum no mom yes rot yes
+
+run 0
+
+fix 1 all box/relax x 0.0 y 0.0
+
+dump  1 all atom 1000 ./min2.5.300.*.atom
+dump_modify   1 sort id
+
+minimize 0 1.0e-12 5000 5000
+
+unfix 1
+undump 1
+
+
+
+dump  1 all atom 5000 ./eqlbm2.5.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2.5.dat
+
+run 25000
+
+unfix 4
+undump 1
+unfix 5
+
+
+write_data pg.min300b.data nocoeff
+
+########################## 
+
+reset_timestep	0
+
+dump  1 all atom 5000 ./eqlbm2.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nvt temp 300.00 300.00 $(100.0*dt) #drag 2
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2b.dat
+
+run 200000
+
+unfix 4
+undump 1
+unfix 5
+
+write_data pg.eqlbm300b.data nocoeff
+
+###########################
+
+dump  1 all atom 5000 ./eqlbm3.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nve
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2c.dat
+
+run 200000
+
+unfix 4
+undump 1
+unfix 5
+
+write_data pg.eqlbm300c.data nocoeff
+
+
+########################################## Pre-heat NVE equilibration
+
+
+reset_timestep	0
+timestep 0.0002
+
+
+
+dump  1 all atom 5000 ./eqlbm3.300.*.atom
+dump_modify   1 sort id
+
+fix 	4 all nve
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo2c.dat
+
+run 50000
+
+unfix 4
+undump 1
+unfix 5
+
+write_data pg.eqlbm300c2.data nocoeff
+
+##################################################################### Heating
+
+reset_timestep	0
+
+dump  1 all atom 100000 ./heat.300.*.atom
+dump_modify   1 sort id
+
+variable tmp equal "(xhi - xlo)/v_vslab"
+variable vdx2 equal ${tmp}
+
+compute   cslabs2 all chunk/atom bin/1d x lower ${vdx2} units box
+
+fix	1 all ave/chunk 1 1000 1000 cslabs2 v_vtemp2 file tmp.dat
+
+
+fix 	5 all print 1000 "${vstep} ${vetotal} ${vpe} ${vke} ${vlx} ${vly} ${vlz} ${vpxx} ${vpyy} ${vpzz} ${vtemp} ${vcpuremain}" append thermo3.dat
+
+fix	fh all thermal/conductivity ${vNfreq} x ${vslab} swap ${vNswap}
+
+variable venergy equal f_fh/2
+
+fix	fp all print 100000 "${venergy}" file energy.dat
+
+fix 	4 all nve
+
+run 11000000 
+
+unfix 1
+
+unfix 4
+
+unfix 5
+
+undump 1
+
+write_data pg.heat300.data nocoeff
+
+#############################################################################################
+################################# SIMULATION DONE
+
+print "All done"
+
+
+
+
+
+
+
+

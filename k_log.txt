@@ -1,0 +1,14 @@
+Average heat exchange rate in one direction of symmetric graded sample is 3.72663 eV/ps.
+x length is  611.30 A, y length (width) is  152.49 A, and thickness taken as  3.40 A
+Average Tmin between 1000 ps to 2100 ps =  230.25 K
+Temp difference =  147.16 K over  30.56 nm
+Mean Std. of slab T's from 1000 to 2100 ps=7.507852590158672 K
+which is  5.10 % of the temperature difference
+Heat flux =  0.011516 e+13 W/m2
+k =  23.9195 W/m.K		G =  0.7826 e9 W/m2.K
+considering 1000 ps to 2100 ps averaged temperature profile atleast 6 nm away from source and sink,
+k from forward region slope =  31.0700 W/m.K
+k from reverse region slope =  32.0388 W/m.K
+average k from slope =   31.5544 W/m.K
+
+Rate of change of system total energy is  0.00018125 +/-  0.00000198 eV/ps
